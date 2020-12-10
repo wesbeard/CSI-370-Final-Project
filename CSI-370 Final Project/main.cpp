@@ -17,6 +17,7 @@ int  spaceY;
 
 void printBoard() {
 	cout << "Printing board..." << endl;
+	cout << "yo" << endl;
 }
 
 void generateBoard() {
