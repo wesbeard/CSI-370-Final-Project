@@ -1,7 +1,8 @@
 /*
-	Wes Beard
+	Wes Beard - wesley.beard@mymail.champlain.edu
+	Michael Leonard - michael.leonard@mymail.champlain.edu
 	CSI-370
-	11/12/2020
+	12/12/2020
 	Assignment 9
 */
 
