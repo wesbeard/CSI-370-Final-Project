@@ -9,6 +9,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
+#include <string>
 
 using namespace std;
 
@@ -18,12 +19,16 @@ int k;
 int spaceX;
 int spaceY;
 int minesCount;
+string toDisplay;
 bool gameOver = false;
 const int dimensions = 10;
 int board[dimensions][dimensions];
 
 void printBoard() {
 
+	board[0][0] = 10;
+
+	system("cls");
 	for (k = 0; k < dimensions; k++) {
 		cout << "  " << k << " ";
 	}
@@ -34,7 +39,13 @@ void printBoard() {
 		}
 		cout << "+" << endl;
 		for (j = 0; j < dimensions; j++) {
-			cout << "| " << board[i][j] << " ";
+			if (board[i][j] > 9) {
+				toDisplay = " ";
+			}
+			else {
+				toDisplay = to_string(board[i][j]);
+			}
+			cout << "| " << toDisplay << " ";
 		}
 		cout << "| " << i << endl;
 	}
@@ -91,9 +102,21 @@ bool validateInput() {
 
 	cout << "Enter the X coordinate of the desired space: " << endl;
 	cin >> spaceX;
+
+	if (spaceX < 0 || spaceX > 9) {
+		cout << "Invalid input" << endl << endl;
+		return false;
+	}
+
 	cout << "Enter the Y coordinate of the desired space: " << endl;
 	cin >> spaceY;
-	return false;
+
+	if (spaceY < 0 || spaceY > 9) {
+		cout << "Invalid input" << endl << endl;
+		return false;
+	}
+
+	return true;
 }
 
 int main() {
