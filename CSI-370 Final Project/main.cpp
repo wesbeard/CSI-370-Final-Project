@@ -49,62 +49,29 @@ void generateBoard() {
 
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
-			minesCount = 0;
 			if (board[i][j] == 9) {
-				if (board[i - 1][j - 1] != 9) {
-					board[i - 1][j - 1]++;
+
+				// 1 2 3
+				// 4   5
+				// 6 7 8
+
+				if (i > 0) {
+					if(j > 0 && board[i-1][j-1] != 9) board[i - 1][j - 1] += 1;
+					if(board[i - 1][j] != 9) board[i - 1][j] += 1;
+					if(j < dimensions && board[i - 1][j + 1] != 9) board[i - 1][j + 1] += 1;
 				}
-				if (board[i - 1][j + 1] != 9) {
-					cout << board[i - 1][j + 1] << endl;
-					board[i - 1][j + 1]++;
+
+				if(j > 0 && board[i][j - 1] != 9) board[i][j - 1] += 1;
+				if(j < dimensions && board[i][j + 1] != 9) board[i][j + 1] += 1;
+
+				if (i < dimensions) {
+					if(j > 0 && board[i + 1][j - 1] != 9) board[i + 1][j - 1] += 1;
+					if(board[i + 1][j] != 9) board[i + 1][j] += 1;
+					if(j < dimensions && board[i + 1][j + 1] != 9) board[i + 1][j + 1] += 1;
 				}
-				if (board[i + 1][j - 1] != 9) {
-					board[i + 1][j - 1]++;
-				}
-				if (board[i + 1][j + 1] != 9) {
-					board[i + 1][j + 1]++;
-				}
-				if (board[i][j + 1] != 9) {
-					board[i][j + 1]++;
-				}
-				if (board[i][j - 1] != 9) {
-					board[i][j - 1]++;
-				}
-				if (board[i - 1][j] != 9) {
-					board[i - 1][j]++;
-				}
-				if (board[i + 1][j] != 9) {
-					board[i + 1][j]++;
-				}
+
 			}
 
-			/*if (board[i][j] == 0) {
-				if (board[i - 1][j - 1] == 9) {
-					minesCount++;
-				}
-				if (board[i - 1][j + 1] == 9) {
-					minesCount++;
-				}
-				if (board[i + 1][j + 1] == 9) {
-					minesCount++;
-				}
-				if (board[i + 1][j - 1] == 9) {
-					minesCount++;
-				}
-				if (board[i][j - 1] == 9) {
-					minesCount++;
-				}
-				if (board[i][j + 1] == 9) {
-					minesCount++;
-				}
-				if (board[i + 1][j] == 9) {
-					minesCount++;
-				}
-				if (board[i - 1][j] == 9) {
-					minesCount++;
-				}
-				board[i][j] = minesCount;
-			}*/
 		}
 	}
  }
