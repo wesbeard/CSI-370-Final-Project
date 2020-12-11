@@ -14,6 +14,7 @@ using namespace std;
 
 int i;
 int j;
+int k;
 int spaceX;
 int spaceY;
 int minesCount;
@@ -23,17 +24,27 @@ int board[dimensions][dimensions];
 
 void printBoard() {
 
-	for (i = 0; i < dimensions; i++) {
-		for (j = 0; j < dimensions; j++) {
-			cout << " - " << board[i][j];
-		}
-		cout << endl;
+	for (k = 0; k < dimensions; k++) {
+		cout << "  " << k << " ";
 	}
+	cout << endl;
+	for (i = 0; i < dimensions; i++) {
+		for (k = 0; k < dimensions; k++) {
+			cout << "+---";
+		}
+		cout << "+" << endl;
+		for (j = 0; j < dimensions; j++) {
+			cout << "| " << board[i][j] << " ";
+		}
+		cout << "| " << i << endl;
+	}
+	for (k = 0; k < dimensions; k++) {
+		cout << "+---";
+	}
+	cout << "+" << endl << endl;
 }
 
 void generateBoard() {
-
-	cout << "Generating board..." << endl;
 
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
