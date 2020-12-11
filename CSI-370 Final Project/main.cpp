@@ -16,17 +16,19 @@ using namespace std;
 int i;
 int j;
 int k;
-int spaceX;
-int spaceY;
+int enteredVal;
+int selectedX, selectedY;
 int minesCount;
+int random;
 string toDisplay;
+string pauseVariable;
 bool gameOver = false;
 const int dimensions = 10;
 int board[dimensions][dimensions];
 
 void printBoard() {
 
-	board[0][0] = 10;
+	toDisplay = "";
 
 	system("cls");
 	for (k = 0; k < dimensions; k++) {
@@ -43,7 +45,13 @@ void printBoard() {
 				toDisplay = " ";
 			}
 			else {
-				toDisplay = to_string(board[i][j]);
+				// display an X for the bombs
+				if (board[i][j] == 9) {
+					toDisplay = "X";
+				}
+				else {
+					toDisplay = to_string(board[i][j]);
+				}
 			}
 			cout << "| " << toDisplay << " ";
 		}
@@ -59,76 +67,104 @@ void generateBoard() {
 
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
-			int random = rand() % 10;
+			random = rand() % 10;
 			if (random == 9) {
-				board[i][j] = 9;
+				board[i][j] = 19;
 			}
 			else {
-				board[i][j] = 0;
+				board[i][j] = 10;
 			}
 		}
 	}
 
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
-			if (board[i][j] == 9) {
+			if (board[i][j] == 19) {
 
 				// 1 2 3
 				// 4   5
 				// 6 7 8
 
 				if (i > 0) {
-					if(j > 0 && board[i-1][j-1] != 9) board[i - 1][j - 1] += 1;
-					if(board[i - 1][j] != 9) board[i - 1][j] += 1;
-					if(j < dimensions && board[i - 1][j + 1] != 9) board[i - 1][j + 1] += 1;
+					if(j > 0 && board[i-1][j-1] != 19) board[i - 1][j - 1] += 1;
+					if(board[i - 1][j] != 19) board[i - 1][j] += 1;
+					if(j < dimensions && board[i - 1][j + 1] != 19) board[i - 1][j + 1] += 1;
 				}
 
-				if(j > 0 && board[i][j - 1] != 9) board[i][j - 1] += 1;
-				if(j < dimensions && board[i][j + 1] != 9) board[i][j + 1] += 1;
+				if(j > 0 && board[i][j - 1] != 19) board[i][j - 1] += 1;
+				if(j < dimensions && board[i][j + 1] != 19) board[i][j + 1] += 1;
 
 				if (i < dimensions) {
-					if(j > 0 && board[i + 1][j - 1] != 9) board[i + 1][j - 1] += 1;
-					if(board[i + 1][j] != 9) board[i + 1][j] += 1;
-					if(j < dimensions && board[i + 1][j + 1] != 9) board[i + 1][j + 1] += 1;
+					if(j > 0 && board[i + 1][j - 1] != 19) board[i + 1][j - 1] += 1;
+					if(board[i + 1][j] != 19) board[i + 1][j] += 1;
+					if(j < dimensions && board[i + 1][j + 1] != 19) board[i + 1][j + 1] += 1;
 				}
 
 			}
-
 		}
+
 	}
  }
 
-bool validateInput() {
-
-	cout << "Enter the X coordinate of the desired space: " << endl;
-	cin >> spaceX;
-
-	if (spaceX < 0 || spaceX > 9) {
-		cout << "Invalid input" << endl << endl;
-		return false;
+void unhideBoard() {
+	for (i = 0; i < dimensions; i++) {
+		for (j = 0; j < dimensions; j++) {
+			if (board[j][i] > 9) {
+				board[j][i] -= 10;
+			}
+		}
 	}
+}
 
-	cout << "Enter the Y coordinate of the desired space: " << endl;
-	cin >> spaceY;
+int validateInput(string type) {
+	// type is either X or Y, used for display purposes
 
-	if (spaceY < 0 || spaceY > 9) {
+	cout << "Enter the " << type << " coordinate of the desired space: " << endl;
+	cin >> enteredVal;
+
+	if (enteredVal < 0 || enteredVal > 9) {
 		cout << "Invalid input" << endl << endl;
-		return false;
+		return -1;
 	}
-
-	return true;
+	
+	return enteredVal;
 }
 
 int main() {
 
 	srand(time(NULL));
+
 	generateBoard();
 	printBoard();
 	while (!gameOver) {
-		if (validateInput()) {
-			printBoard();
+		selectedX = -1;
+		while (selectedX == -1) {
+			selectedX = validateInput("X");
 		}
+		selectedY = -1;
+		while (selectedY == -1) {
+			selectedY = validateInput("Y");
+		}
+
+		if (board[selectedY][selectedX] > 9) {
+			// any number > 10 is hidden,
+			// make the board[y][x] unhidden if it's not already
+			board[selectedY][selectedX] -= 10;
+		}
+
+		printBoard();
+		
+		if (board[selectedY][selectedX] == 9) {
+			gameOver = true;
+		}
+
 	}
+
+	unhideBoard();
+	printBoard();
+	cout << endl << "You lose..." << endl;
+	// pause screen
+	cin >> pauseVariable;
 
 	return 0;
 }
