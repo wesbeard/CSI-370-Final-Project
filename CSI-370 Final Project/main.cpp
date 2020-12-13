@@ -51,12 +51,13 @@ __asm {
 	jg success
 	// else goes here
 	// ...
-	mov eax, 0
+	mov eax, 0	// (part of example code)
+	jmp done
 
 	// if goes here
 	// ...
 	success :
-		mov eax, 1
+		mov eax, 1	// (part of example code)
 
 	// end of if-statement
 	done :
@@ -74,7 +75,7 @@ for (i = 0; i < dimensions; i++) {
 }
 
 __asm {
-	// set eax to 0
+	// set eax to 0 (part of example code)
 	xor eax, eax
 
 	mov ebx, 0
