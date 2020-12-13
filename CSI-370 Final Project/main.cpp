@@ -29,6 +29,9 @@ bool quit = false;
 const int dimensions = 10;
 int board[dimensions][dimensions];
 
+char format[] = "%s\n";
+char hello[] = "Invalid input";
+
 extern "C" void printBoard() {
 
 	toDisplay = "";
@@ -131,19 +134,51 @@ extern "C" void unhideBoard() {
 	}
 }
 
+extern "C" void printStringNewLine(string str) {
+	cout << str << endl;
+}
+
 extern "C" int validateInput(string type) {
 	// type is either X or Y, used for display purposes
 
 	cout << "Enter the " << type << " coordinate of the desired space: " << endl;
 	cin >> enteredVal;
 
-	if (enteredVal < 0 || enteredVal > 9) {
-		cout << "Invalid input" << endl << endl;
-		return -1;
-	}
+	__asm {
+		// if (enteredVal < 0 || enteredVal > 9) {
+		// 	  cout << "Invalid input" << endl << endl;
+		// 	  return -1;
+		// } else {
+		//    return enteredVal
+		// }
 
-	return enteredVal;
+		cmp enteredVal, 0
+		jl success
+		// else
+		mov eax, enteredVal
+		jmp done
+
+		// if
+		success:
+		mov  eax, offset hello
+		push eax
+		mov  eax, offset format
+		push eax
+		call printf
+		//clean up the stack so that main can exit cleanly
+		//use the unused register ebx to do the cleanup
+		pop  ebx
+		pop  ebx
+
+		mov eax, -1
+
+		done:
+		
+	};
+
 }
+
+
 
 int main() {
 
