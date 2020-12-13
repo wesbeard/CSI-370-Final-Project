@@ -239,10 +239,10 @@ extern "C" void generateBoard() {
 		mov ecx, 0
 			inner :
 
-				mov eax, ecx
+				mov loopMath, ecx
 				// get new random number
 				call newRandom
-				mov ecx, eax
+				mov ecx, loopMath
 
 				xor eax, eax
 				mov loopMath, 0
