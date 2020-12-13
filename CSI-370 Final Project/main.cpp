@@ -56,6 +56,7 @@ __asm {
 
 	// if goes here
 	// ...
+	jmp done
 	success :
 		mov eax, 1	// (part of example code)
 
@@ -153,6 +154,7 @@ int enteredVal;
 int selectedX, selectedY;
 int minesCount;
 int random;
+int currentRandom;
 string toDisplay;
 char quitVariable;
 bool gameOver = false;
@@ -206,23 +208,92 @@ extern "C" void printBoard() {
 	cout << "+" << endl << endl;
 }
 
+extern "C" void newRandom() {
+	cout << "New random ";
+	currentRandom = rand() % 5;
+}
+
 extern "C" void generateBoard() {
+	
+	//for (i = 0; i < dimensions; i++) {
+	//	for (j = 0; j < dimensions; j++) {
+	//		// set bombs on the board (anything >9 is hidden, so the bombs are hidden by default)
+	//		random = rand() % 5;				// maybe make a rareity variable (so we can change the percentage chance easily)
+	//											// I TEMPORARILY made the bomb placement a 1/5 chance to make testing easier ***********************************
+	//		if (random == 0) {
+	//			board[i][j] = 19;
+	//		}
+	//		else {
+	//			board[i][j] = 10;
+	//		}
+	//	}
+	//}
 
-	cout << "generate board";
+	cout << "foobar1";
 
-	for (i = 0; i < dimensions; i++) {
-		for (j = 0; j < dimensions; j++) {
-			// set bombs on the board (anything >9 is hidden, so the bombs are hidden by default)
-			random = rand() % 5;				// maybe make a rareity variable (so we can change the percentage chance easily)
-												// I TEMPORARILY made the bomb placement a 1/5 chance to make testing easier ***********************************
-			if (random == 0) {
-				board[i][j] = 19;
-			}
-			else {
-				board[i][j] = 10;
-			}
-		}
-	}
+	__asm {
+		// set eax to 0
+		xor eax, eax
+
+		mov ebx, 0
+		outer :
+		mov ecx, 0
+			inner :
+
+				mov eax, ecx
+				// get new random number
+				call newRandom
+				mov ecx, eax
+
+				xor eax, eax
+				mov loopMath, 0
+
+				mov eax, ecx
+				imul eax, 4
+				// eax = ecx * 4
+
+				mov loopMath, offset board
+				add eax, loopMath
+				// eax = (address of board) + (ecx * 4)
+
+				mov edx, dimensions
+				imul edx, ebx
+				// edx = dimensions * outerloop counter
+				// ex. ebx = 4 makes edx = 4 * (board size of 10) = start at 40
+				// THEN add onto 40 by whatever inner loop is at
+
+				imul edx, 4
+				add eax, edx
+				// eax will now hold the address of each individual cell
+				// eax = &board[i][j]
+				
+				mov edx, [eax]
+				
+				// if (x == 0)
+				cmp currentRandom, 0
+				je success
+				// else goes here
+				mov [eax], 10
+				jmp done
+				
+				success:
+				// if goes here
+				mov[eax], 19
+
+				// end of if-statement
+				done :
+
+			// inner loop increase
+			inc ecx
+			cmp ecx, dimensions
+			jne inner
+			// outer loop increase
+			inc ebx
+			cmp ebx, dimensions
+			jne outer
+	};
+
+	cout << "foobar2";
 
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
@@ -415,7 +486,7 @@ int main() {
 
 			printBoard();
 
-			if (board[selectedY][selectedX] == 9) {
+			if(board[selectedY][selectedX] == 9) {
 				gameOver = true;
 			}
 
@@ -476,7 +547,6 @@ int main() {
 			done:
 
 		};
-
 	}
 	return 0;
 }
