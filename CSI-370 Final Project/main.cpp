@@ -13,6 +13,8 @@
 
 using namespace std;
 
+extern "C" void _asmMain();
+
 int i;
 int j;
 int k;
@@ -27,12 +29,12 @@ bool quit = false;
 const int dimensions = 10;
 int board[dimensions][dimensions];
 
-void printBoard() {
+extern "C" void printBoard() {
 
 	toDisplay = "";
 
 	system("cls");
-	for (k = 0; k < dimensions; k++) {
+	for (int k = 0; k < dimensions; k++) {
 		cout << "  " << k << " ";
 	}
 	cout << endl;
@@ -64,7 +66,9 @@ void printBoard() {
 	cout << "+" << endl << endl;
 }
 
-void generateBoard() {
+extern "C" void generateBoard() {
+
+	cout << "generate board";
 
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
@@ -115,7 +119,7 @@ void generateBoard() {
 	}
  }
 
-void unhideBoard() {
+extern "C" void unhideBoard() {
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
 			// if board is hidden at this position (> 9)
@@ -127,7 +131,7 @@ void unhideBoard() {
 	}
 }
 
-int validateInput(string type) {
+extern "C" int validateInput(string type) {
 	// type is either X or Y, used for display purposes
 
 	cout << "Enter the " << type << " coordinate of the desired space: " << endl;
@@ -143,23 +147,17 @@ int validateInput(string type) {
 
 int main() {
 
-	// seed the random number generator
+
 	srand(time(NULL));
 
 	while (!quit) {
-
-		// initialize board
 		generateBoard();
-		// print first instance of board
 		printBoard();
-
 		while (!gameOver) {
-			// start with invalid x, loop until x is valid
 			selectedX = -1;
 			while (selectedX == -1) {
 				selectedX = validateInput("X");
 			}
-			// start with invalid y, loop until y is valid
 			selectedY = -1;
 			while (selectedY == -1) {
 				selectedY = validateInput("Y");
@@ -193,5 +191,4 @@ int main() {
 		}
 	}
 	return 1;
-
 }
