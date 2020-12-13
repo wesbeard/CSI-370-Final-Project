@@ -13,8 +13,6 @@
 
 using namespace std;
 
-extern "C" void _asmMain();
-
 int i;
 int j;
 int k;
@@ -23,14 +21,20 @@ int selectedX, selectedY;
 int minesCount;
 int random;
 string toDisplay;
-string quitVariable;
+char quitVariable;
 bool gameOver = false;
 bool quit = false;
 const int dimensions = 10;
 int board[dimensions][dimensions];
 
-char format[] = "%s\n";
-char hello[] = "Invalid input";
+// string variables used in assembly to print
+char invalidFormat[] = "%s\n";
+char invalidMessage[] = "Invalid input";
+
+char questionFormat[] = "Enter the %s coordinate of the desired space: ";
+
+// assembly loop math helper variable
+int loopMath = 0;
 
 extern "C" void printBoard() {
 
@@ -75,8 +79,8 @@ extern "C" void generateBoard() {
 
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
-			random = rand() % 10;
-			if (random == 9) {
+			random = rand() % 5;				// make rareity variable
+			if (random == 0) {
 				board[i][j] = 19;
 			}
 			else {
@@ -123,24 +127,86 @@ extern "C" void generateBoard() {
 }
 
 extern "C" void unhideBoard() {
-	for (i = 0; i < dimensions; i++) {
-		for (j = 0; j < dimensions; j++) {
-			// if board is hidden at this position (> 9)
-			if (board[j][i] > 9) {
-				// set to unhidden (<= 9)
-				board[j][i] -= 10;
+
+	__asm {
+
+		/*
+		for (i = 0; i < dimensions; i++) {
+			for (j = 0; j < dimensions; j++) {
+				if (board[j][i] > 9) {
+					board[j][i] -= 10;
+				}
 			}
 		}
-	}
+		*/
+		
+		mov ebx, 0
+		outer:
+			mov ecx, 0
+			inner:
+				// clear eax and loopMath (loopMath is a helper variable for doing math
+				// with addresses of 2d arrays
+				xor eax, eax
+				mov loopMath, 0
+
+				mov eax, ecx
+				imul eax, 4
+				// eax = ecx * 4
+				
+				mov loopMath, offset board
+				add eax, loopMath
+				// eax = (address of board) + (ecx * 4)
+				
+				mov edx, dimensions
+				imul edx, ebx
+				// edx = dimensions * outerloop counter
+				// ex. ebx = 4 makes edx = 4 * (board size of 10) = start at 40
+				// THEN add onto 40 by whatever inner loop is at
+
+				imul edx, 4
+				add eax, edx
+				// eax will now hold the address of each individual cell
+				// eax = &board[i][j]
+
+				mov edx, [eax]
+				// edx now holds the value of board[i][j]
+
+				// begin if statement ==========
+				// if (board[j][i] > 9)
+				cmp edx, 9
+				// then jump to success
+				jg success
+				// else
+				
+				jmp done
+
+				// if
+				success :
+					// set to unhidden (<= 9)
+					// subtract 10 from board[i][j]
+					sub edx, 10
+					// set board[i][j] = board[i][j]-10
+					mov [eax], edx
+
+				// end of if
+				done :
+				// end if statement ============
+
+				// inner loop increase
+				inc ecx
+				cmp ecx, dimensions
+				jne inner
+			// outer loop increase
+			inc ebx
+			cmp ebx, dimensions
+			jne outer
+	};
 }
 
-extern "C" void printStringNewLine(string str) {
-	cout << str << endl;
-}
 
-extern "C" int validateInput(string type) {
+extern "C" int validateInput(char *type) {
 	// type is either X or Y, used for display purposes
-
+	
 	cout << "Enter the " << type << " coordinate of the desired space: " << endl;
 	cin >> enteredVal;
 
@@ -152,26 +218,33 @@ extern "C" int validateInput(string type) {
 		//    return enteredVal
 		// }
 
+		// if (enteredVal < 0)
 		cmp enteredVal, 0
 		jl success
+		// || (enteredVal > 9)
+		cmp enteredVal, 9
+		jg success
 		// else
+		// return enteredVal
 		mov eax, enteredVal
 		jmp done
 
 		// if
 		success:
-		mov  eax, offset hello
-		push eax
-		mov  eax, offset format
-		push eax
-		call printf
-		//clean up the stack so that main can exit cleanly
-		//use the unused register ebx to do the cleanup
-		pop  ebx
-		pop  ebx
+			mov  eax, offset invalidMessage
+			push eax
+			mov  eax, offset invalidFormat
+			push eax
+			call printf
+			// clean up the stack so that main can exit cleanly
+			// use the register ebx for cleanup
+			pop ebx
+			pop ebx
 
-		mov eax, -1
+			// return -1
+			mov eax, -1
 
+		// end of if
 		done:
 		
 	};
@@ -212,18 +285,41 @@ int main() {
 
 		}
 
+		// TODO : add to assembly
 		unhideBoard();
 		printBoard();
 		cout << endl << "You lose..." << endl;
 		cout << "Enter [n] for a new game or any other key to quit" << endl;
 		cin >> quitVariable;
 
-		if (quitVariable == "n") {
-			gameOver = false;
-		}
-		else {
-			return 0;
-		}
+		__asm {
+			/*
+			if (quitVariable == "n") {
+				gameOver = false;
+			}
+			else {
+				quit = True
+			}
+			*/
+
+			// if (quitVariable == "n")
+			cmp quitVariable, 110 // 110 is ascii for 'n'
+			je success
+			// else
+			// set quit to True
+			mov quit, 1
+			jmp done
+
+			// if
+			success :
+				// set gameOver to False
+				mov gameOver, 0
+
+			// end of if
+			done:
+
+		};
+
 	}
-	return 1;
+	return 0;
 }
