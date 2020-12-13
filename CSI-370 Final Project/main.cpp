@@ -6,6 +6,138 @@
 	Final Project
 */
 
+
+/*
+========== Template print message ==========
+
+Variables declared at top of program:
+char invalidFormat[] = "%s\n";	// %s means string
+char invalidMessage[] = "Invalid input";
+
+printf(invalidFormat, invalidMessage)
+
+__asm {
+	mov  eax, offset invalidMessage
+	push eax
+	mov  eax, offset invalidFormat
+	push eax
+	// print invalidMessage
+	call printf
+	// clean up the stack
+	// use unused register ebx for cleanup
+	pop ebx
+	pop ebx
+};
+*/
+
+
+/*
+
+========== Template if-statement ==========
+int x = 9
+if (x > 10) {
+		return 1;
+	} else {
+		return 0;
+	}
+}
+
+Note: if the function has NO CODE after the assembly including a return statement,
+it will return whatever is in eax
+
+__asm {
+	// if (x > 10)
+	cmp x, 10
+	jg success
+	// else goes here
+	// ...
+	mov eax, 0
+
+	// if goes here
+	// ...
+	success :
+		mov eax, 1
+
+	// end of if-statement
+	done :
+
+};
+
+*/
+
+/*
+========== Template nested for loop ==========
+for (i = 0; i < dimensions; i++) {
+	for (j = 0; j < dimensions; j++) {
+		eax++
+	}
+}
+
+__asm {
+	// set eax to 0
+	xor eax, eax
+
+	mov ebx, 0
+	outer :
+		mov ecx, 0
+		inner :
+			
+			// increment eax (this is where your code goes)
+			inc eax
+
+		// inner loop increase
+		inc ecx
+		cmp ecx, dimensions
+		jne inner
+	// outer loop increase
+	inc ebx
+	cmp ebx, dimensions
+	jne outer
+};
+
+*/
+
+/*
+========== Template 2d array access ==========
+
+Note: this is to be used within a nested for loop
+
+At the end of this code, you will have board[i][j]
+	The value of board[i][j] is in edx
+	The reference to board[i][j] is in eax
+		(setting board[i][j] = 9 would look like "mov [eax], 9"
+
+__asm {
+	// clear eax and loopMath (loopMath is a helper variable for doing math
+	// with addresses of 2d arrays
+	xor eax, eax
+	mov loopMath, 0
+
+	mov eax, ecx
+	imul eax, 4
+	// eax = ecx * 4
+
+	mov loopMath, offset board
+	add eax, loopMath
+	// eax = (address of board) + (ecx * 4)
+
+	mov edx, dimensions
+	imul edx, ebx
+	// edx = dimensions * outerloop counter
+	// ex. ebx = 4 makes edx = 4 * (board size of 10) = start at 40
+	// THEN add onto 40 by whatever inner loop is at
+
+	imul edx, 4
+	add eax, edx
+	// eax will now hold the address of each individual cell
+	// eax = &board[i][j]
+
+	mov edx, [eax]
+	// edx now holds the value of board[i][j]
+};
+*/
+
+
 #include <iostream>
 #include <stdlib.h>
 #include <time.h>
@@ -31,9 +163,9 @@ int board[dimensions][dimensions];
 char invalidFormat[] = "%s\n";
 char invalidMessage[] = "Invalid input";
 
-char questionFormat[] = "Enter the %s coordinate of the desired space: ";
+char endOfGameMessage[] = "\nYou lose\nEnter [n] for a new game or any other key to quit\n";
 
-// assembly loop math helper variable
+// helper variable for doing math while trying to access array positions in nested for loops
 int loopMath = 0;
 
 extern "C" void printBoard() {
@@ -79,7 +211,9 @@ extern "C" void generateBoard() {
 
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
-			random = rand() % 5;				// make rareity variable
+			// set bombs on the board (anything >9 is hidden, so the bombs are hidden by default)
+			random = rand() % 5;				// maybe make a rareity variable (so we can change the percentage chance easily)
+												// I TEMPORARILY made the bomb placement a 1/5 chance to make testing easier ***********************************
 			if (random == 0) {
 				board[i][j] = 19;
 			}
@@ -91,6 +225,7 @@ extern "C" void generateBoard() {
 
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
+			// place all numbers on the board
 			if (board[i][j] == 19) {
 
 				// 1 2 3
@@ -204,7 +339,7 @@ extern "C" void unhideBoard() {
 }
 
 
-extern "C" int validateInput(char *type) {
+extern "C" int validateInput(string type) {
 	// type is either X or Y, used for display purposes
 	
 	cout << "Enter the " << type << " coordinate of the desired space: " << endl;
@@ -235,9 +370,10 @@ extern "C" int validateInput(char *type) {
 			push eax
 			mov  eax, offset invalidFormat
 			push eax
+			// print invalidMessage
 			call printf
-			// clean up the stack so that main can exit cleanly
-			// use the register ebx for cleanup
+			// clean up the stack
+			// use register ebx for cleanup
 			pop ebx
 			pop ebx
 
@@ -254,7 +390,6 @@ extern "C" int validateInput(char *type) {
 
 
 int main() {
-
 
 	srand(time(NULL));
 
@@ -285,14 +420,35 @@ int main() {
 
 		}
 
-		// TODO : add to assembly
-		unhideBoard();
-		printBoard();
-		cout << endl << "You lose..." << endl;
-		cout << "Enter [n] for a new game or any other key to quit" << endl;
+
+		__asm {
+
+			// show entire board and let user restart if they'd like
+
+			/*
+			unhideBoard();
+			printBoard();
+			cout << endl << "You lose..." << endl;
+			cout << "Enter [n] for a new game or any other key to quit" << endl;
+			*/
+
+			call unhideBoard;
+			call printBoard;
+
+			mov  eax, offset endOfGameMessage
+			push eax
+			// print endOfGameMessage
+			call printf
+			// clean up the stack
+			// use unused register ebx for cleanup
+			pop ebx
+
+		};
+
 		cin >> quitVariable;
 
 		__asm {
+
 			/*
 			if (quitVariable == "n") {
 				gameOver = false;
