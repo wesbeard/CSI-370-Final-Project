@@ -21,8 +21,9 @@ int selectedX, selectedY;
 int minesCount;
 int random;
 string toDisplay;
-string pauseVariable;
+string quitVariable;
 bool gameOver = false;
+bool quit = false;
 const int dimensions = 10;
 int board[dimensions][dimensions];
 
@@ -145,43 +146,52 @@ int main() {
 	// seed the random number generator
 	srand(time(NULL));
 
-	// initialize board
-	generateBoard();
-	// print first instance of board
-	printBoard();
+	while (!quit) {
 
-	while (!gameOver) {
-		// start with invalid x, loop until x is valid
-		selectedX = -1;
-		while (selectedX == -1) {
-			selectedX = validateInput("X");
-		}
-		// start with invalid y, loop until y is valid
-		selectedY = -1;
-		while (selectedY == -1) {
-			selectedY = validateInput("Y");
-		}
-
-		if (board[selectedY][selectedX] > 9) {
-			// any number > 10 is hidden,
-			// make the board[y][x] unhidden if it's not already
-			board[selectedY][selectedX] -= 10;
-		}
-
+		// initialize board
+		generateBoard();
+		// print first instance of board
 		printBoard();
-		
-		if (board[selectedY][selectedX] == 9) {
-			gameOver = true;
+
+		while (!gameOver) {
+			// start with invalid x, loop until x is valid
+			selectedX = -1;
+			while (selectedX == -1) {
+				selectedX = validateInput("X");
+			}
+			// start with invalid y, loop until y is valid
+			selectedY = -1;
+			while (selectedY == -1) {
+				selectedY = validateInput("Y");
+			}
+
+			if (board[selectedY][selectedX] > 9) {
+				// any number > 10 is hidden,
+				// make the board[y][x] unhidden if it's not already
+				board[selectedY][selectedX] -= 10;
+			}
+
+			printBoard();
+
+			if (board[selectedY][selectedX] == 9) {
+				gameOver = true;
+			}
+
 		}
 
+		unhideBoard();
+		printBoard();
+		cout << endl << "You lose..." << endl;
+		cout << "Enter [n] for a new game or any other key to quit" << endl;
+		cin >> quitVariable;
+
+		if (quitVariable == "n") {
+			gameOver = false;
+		}
+		else {
+			return 0;
+		}
 	}
+	return 1;
 
-	// unhide all tiles at the end of the game
-	unhideBoard();
-	printBoard();
-	cout << endl << "You lose..." << endl;
-	// pause the terminal
-	cin >> pauseVariable;
-
-	return 0;
 }
