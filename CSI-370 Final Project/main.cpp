@@ -13,6 +13,8 @@
 
 using namespace std;
 
+extern "C" void _asmMain();
+
 int i;
 int j;
 int k;
@@ -21,17 +23,18 @@ int selectedX, selectedY;
 int minesCount;
 int random;
 string toDisplay;
-string pauseVariable;
+string quitVariable;
+bool quit = false;
 bool gameOver = false;
 const int dimensions = 10;
 int board[dimensions][dimensions];
 
-void printBoard() {
+extern "C" void printBoard() {
 
 	toDisplay = "";
 
 	system("cls");
-	for (k = 0; k < dimensions; k++) {
+	for (int k = 0; k < dimensions; k++) {
 		cout << "  " << k << " ";
 	}
 	cout << endl;
@@ -63,7 +66,9 @@ void printBoard() {
 	cout << "+" << endl << endl;
 }
 
-void generateBoard() {
+extern "C" void generateBoard() {
+
+	cout << "generate board";
 
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
@@ -106,7 +111,7 @@ void generateBoard() {
 	}
  }
 
-void unhideBoard() {
+extern "C" void unhideBoard() {
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
 			if (board[j][i] > 9) {
@@ -116,7 +121,7 @@ void unhideBoard() {
 	}
 }
 
-int validateInput(string type) {
+extern "C" int validateInput(string type) {
 	// type is either X or Y, used for display purposes
 
 	cout << "Enter the " << type << " coordinate of the desired space: " << endl;
@@ -132,39 +137,50 @@ int validateInput(string type) {
 
 int main() {
 
+	_asmMain();
+
 	srand(time(NULL));
 
-	generateBoard();
-	printBoard();
-	while (!gameOver) {
-		selectedX = -1;
-		while (selectedX == -1) {
-			selectedX = validateInput("X");
-		}
-		selectedY = -1;
-		while (selectedY == -1) {
-			selectedY = validateInput("Y");
-		}
-
-		if (board[selectedY][selectedX] > 9) {
-			// any number > 10 is hidden,
-			// make the board[y][x] unhidden if it's not already
-			board[selectedY][selectedX] -= 10;
-		}
-
+	while (!quit) {
+		generateBoard();
 		printBoard();
-		
-		if (board[selectedY][selectedX] == 9) {
-			gameOver = true;
+		while (!gameOver) {
+			selectedX = -1;
+			while (selectedX == -1) {
+				selectedX = validateInput("X");
+			}
+			selectedY = -1;
+			while (selectedY == -1) {
+				selectedY = validateInput("Y");
+			}
+
+			if (board[selectedY][selectedX] > 9) {
+				// any number > 10 is hidden,
+				// make the board[y][x] unhidden if it's not already
+				board[selectedY][selectedX] -= 10;
+			}
+
+			printBoard();
+
+			if (board[selectedY][selectedX] == 9) {
+				gameOver = true;
+			}
+
 		}
 
+		unhideBoard();
+		printBoard();
+		cout << endl << "You lose..." << endl;
+		cout << "Enter [n] for a new game or any other key to quit" << endl;
+		cin >> quitVariable;
+
+		if (quitVariable == "n") {
+			gameOver = false;
+		}
+		else {
+			return 0;
+		}
 	}
 
-	unhideBoard();
-	printBoard();
-	cout << endl << "You lose..." << endl;
-	// pause screen
-	cin >> pauseVariable;
-
-	return 0;
+	return 1;
 }
