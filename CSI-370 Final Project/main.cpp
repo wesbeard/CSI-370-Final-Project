@@ -209,8 +209,14 @@ extern "C" void printBoard() {
 }
 
 extern "C" void newRandom() {
+
 	cout << "New random ";
 	currentRandom = rand() % 5;
+
+	__asm {
+		// return currentRandom
+		mov eax, currentRandom
+	};
 }
 
 extern "C" void generateBoard() {
@@ -240,11 +246,15 @@ extern "C" void generateBoard() {
 		mov ecx, 0
 			inner :
 
-				mov eax, ecx
+				// save ecx before calling rand()
+				mov loopMath, ecx
+
+				xor eax, eax
 				// get new random number
 				call newRandom
-				mov ecx, eax
-
+				mov currentRandom, eax
+				mov ecx, loopMath
+				
 				xor eax, eax
 				mov loopMath, 0
 
