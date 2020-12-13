@@ -91,17 +91,25 @@ extern "C" void generateBoard() {
 				// 6 7 8
 
 				if (i > 0) {
+					// top left
 					if(j > 0 && board[i-1][j-1] != 19) board[i - 1][j - 1] += 1;
+					// top middle
 					if(board[i - 1][j] != 19) board[i - 1][j] += 1;
+					// top right
 					if(j < dimensions && board[i - 1][j + 1] != 19) board[i - 1][j + 1] += 1;
 				}
 
+				// middle left
 				if(j > 0 && board[i][j - 1] != 19) board[i][j - 1] += 1;
+				// middle right
 				if(j < dimensions && board[i][j + 1] != 19) board[i][j + 1] += 1;
 
 				if (i < dimensions) {
+					// bottom left
 					if(j > 0 && board[i + 1][j - 1] != 19) board[i + 1][j - 1] += 1;
+					// bottom middle
 					if(board[i + 1][j] != 19) board[i + 1][j] += 1;
+					// bottom right
 					if(j < dimensions && board[i + 1][j + 1] != 19) board[i + 1][j + 1] += 1;
 				}
 
@@ -114,7 +122,9 @@ extern "C" void generateBoard() {
 extern "C" void unhideBoard() {
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
+			// if board is hidden at this position (> 9)
 			if (board[j][i] > 9) {
+				// set to unhidden (<= 9)
 				board[j][i] -= 10;
 			}
 		}
@@ -137,6 +147,7 @@ extern "C" int validateInput(string type) {
 
 int main() {
 
+<<<<<<< HEAD
 	_asmMain();
 
 	srand(time(NULL));
@@ -165,6 +176,27 @@ int main() {
 			if (board[selectedY][selectedX] == 9) {
 				gameOver = true;
 			}
+=======
+	// seed the random number generator
+	srand(time(NULL));
+
+	// initialize board
+	generateBoard();
+	// print first instance of board
+	printBoard();
+
+	while (!gameOver) {
+		// start with invalid x, loop until x is valid
+		selectedX = -1;
+		while (selectedX == -1) {
+			selectedX = validateInput("X");
+		}
+		// start with invalid y, loop until y is valid
+		selectedY = -1;
+		while (selectedY == -1) {
+			selectedY = validateInput("Y");
+		}
+>>>>>>> 8a6971d383ecaddfc621f65ab13fbbe53e756188
 
 		}
 
@@ -182,5 +214,16 @@ int main() {
 		}
 	}
 
+<<<<<<< HEAD
 	return 1;
+=======
+	// unhide all tiles at the end of the game
+	unhideBoard();
+	printBoard();
+	cout << endl << "You lose..." << endl;
+	// pause the terminal
+	cin >> pauseVariable;
+
+	return 0;
+>>>>>>> 8a6971d383ecaddfc621f65ab13fbbe53e756188
 }
