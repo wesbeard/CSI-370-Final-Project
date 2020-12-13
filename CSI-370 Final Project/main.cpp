@@ -13,8 +13,6 @@
 
 using namespace std;
 
-extern "C" void _asmMain();
-
 int i;
 int j;
 int k;
@@ -29,7 +27,7 @@ bool quit = false;
 const int dimensions = 10;
 int board[dimensions][dimensions];
 
-extern "C" void printBoard() {
+void printBoard() {
 
 	toDisplay = "";
 
@@ -66,7 +64,7 @@ extern "C" void printBoard() {
 	cout << "+" << endl << endl;
 }
 
-extern "C" void generateBoard() {
+void generateBoard() {
 
 	cout << "generate board";
 
@@ -119,7 +117,7 @@ extern "C" void generateBoard() {
 	}
 }
 
-extern "C" void unhideBoard() {
+void unhideBoard() {
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
 			// if board is hidden at this position (> 9)
@@ -131,7 +129,7 @@ extern "C" void unhideBoard() {
 	}
 }
 
-extern "C" int validateInput(string type) {
+int validateInput(string type) {
 	// type is either X or Y, used for display purposes
 
 	cout << "Enter the " << type << " coordinate of the desired space: " << endl;
