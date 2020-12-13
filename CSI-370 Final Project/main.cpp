@@ -6,6 +6,24 @@
 	Final Project
 */
 
+/*
+========== Template while loop ==========
+
+eax = 0;
+while(eax < dimensions) {
+	eax++;
+}
+
+__asm {
+	mov eax, 0	// used for example
+	while_loop :
+		cmp eax, dimensions
+		jge while_done
+		inc eax	// your code goes here
+		jmp while_loop
+	while_done :
+};
+*/
 
 /*
 ========== Template print message ==========
@@ -211,7 +229,7 @@ extern "C" void printBoard() {
 extern "C" void newRandom() {
 
 	cout << "New random ";
-	currentRandom = rand() % 5;
+	currentRandom = rand() % 5;		// maybe make a rareity variable (so we can change the percentage chance easily)
 
 	__asm {
 		// return currentRandom
@@ -224,8 +242,8 @@ extern "C" void generateBoard() {
 	//for (i = 0; i < dimensions; i++) {
 	//	for (j = 0; j < dimensions; j++) {
 	//		// set bombs on the board (anything >9 is hidden, so the bombs are hidden by default)
-	//		random = rand() % 5;				// maybe make a rareity variable (so we can change the percentage chance easily)
-	//											// I TEMPORARILY made the bomb placement a 1/5 chance to make testing easier ***********************************
+	//		random = rand() % 5;
+	//							
 	//		if (random == 0) {
 	//			board[i][j] = 19;
 	//		}
@@ -287,8 +305,8 @@ extern "C" void generateBoard() {
 				jmp done
 				
 				success:
-				// if goes here
-				mov[eax], 19
+					// if goes here
+					mov[eax], 19
 
 				// end of if-statement
 				done :
@@ -297,10 +315,10 @@ extern "C" void generateBoard() {
 			inc ecx
 			cmp ecx, dimensions
 			jne inner
-			// outer loop increase
-			inc ebx
-			cmp ebx, dimensions
-			jne outer
+		// outer loop increase
+		inc ebx
+		cmp ebx, dimensions
+		jne outer
 	};
 
 	cout << "foobar2";
@@ -475,6 +493,18 @@ int main() {
 
 	srand(time(NULL));
 
+	__asm {
+		mov eax, 0
+		while_loop :
+			cmp eax, dimensions
+			jge while_done
+			inc eax
+			jmp while_loop
+		while_done :
+
+
+	};
+
 	while (!quit) {
 		generateBoard();
 		printBoard();
@@ -554,7 +584,7 @@ int main() {
 				mov gameOver, 0
 
 			// end of if
-			done:
+			done :
 
 		};
 	}
