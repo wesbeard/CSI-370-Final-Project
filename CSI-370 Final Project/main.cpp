@@ -168,10 +168,12 @@ int i;
 int j;
 int k;
 int enteredVal;
-int selectedX, selectedY;
+int selectedX;
+int selectedY;
 int minesCount;
 int random;
 int currentRandom;
+int selectedIndex;
 string toDisplay;
 char quitVariable;
 bool gameOver = false;
@@ -194,7 +196,7 @@ extern "C" void printBoard() {
 	toDisplay = "";
 
 	system("cls");
-	for (int k = 0; k < dimensions; k++) {
+	for (k = 0; k < dimensions; k++) {
 		cout << "  " << k << " ";
 	}
 	cout << endl;
@@ -228,7 +230,7 @@ extern "C" void printBoard() {
 
 extern "C" void newRandom() {
 
-	currentRandom = rand() % 8;		// maybe make a rareity variable (so we can change the percentage chance easily)
+	currentRandom = rand() % 10;		// maybe make a rareity variable (so we can change the percentage chance easily)
 
 	__asm {
 		// return currentRandom
@@ -685,9 +687,16 @@ extern "C" void unhideBoard() {
 }
 
 
-extern "C" int validateInput(string type) {
+extern "C" int validateInput(int typeCode) {
 	// type is either X or Y, used for display purposes
-	
+	char type;
+	if (typeCode == 0) {
+		type = 'X';
+	}
+	else {
+		type = 'Y';
+	}
+
 	cout << "Enter the " << type << " coordinate of the desired space: " << endl;
 	cin >> enteredVal;
 
@@ -733,13 +742,14 @@ extern "C" int validateInput(string type) {
 
 }
 
-
-
 int main() {
 
 	srand(time(NULL));
 
-	while (!quit) {
+	__asm {
+
+		/* CODE BEING REPLACED:
+		while (!quit) {
 		generateBoard();
 		printBoard();
 		while (!gameOver) {
@@ -764,63 +774,149 @@ int main() {
 				gameOver = true;
 			}
 
-		}
-
-
-		__asm {
-
-			// show entire board and let user restart if they'd like
-
-			/*
 			unhideBoard();
 			printBoard();
 			cout << endl << "You lose..." << endl;
 			cout << "Enter [n] for a new game or any other key to quit" << endl;
-			*/
+		}
+		*/
 
-			call unhideBoard;
-			call printBoard;
+		quit_loop :
+			// if quit is true then end loop
+			cmp quit, 1
+			je quit_done
 
-			mov  eax, offset endOfGameMessage
-			push eax
-			// print endOfGameMessage
-			call printf
-			// clean up the stack
-			// use unused register ebx for cleanup
-			pop ebx
+			//generate and print the board on new game
+			call generateBoard
+			call printBoard
 
-		};
+			game_over_loop :
+				// if gameOver is true then end loop
+				cmp gameOver, 1
+				je game_over_done
 
-		cin >> quitVariable;
+					// validate input for the x coordinate	
+					mov eax, -1
+					x_loop:
+						cmp eax, -1
+						jne x_done
 
-		__asm {
+						// parameter 0 = x
+						mov eax, 0
+						push eax
+						call validateInput
+						pop ebx
 
-			/*
-			if (quitVariable == "n") {
-				gameOver = false;
-			}
-			else {
-				quit = True
-			}
-			*/
+						jmp x_loop
+					x_done:
+					mov selectedX, eax
 
-			// if (quitVariable == "n")
-			cmp quitVariable, 110 // 110 is ascii for 'n'
-			je success
-			// else
-			// set quit to True
-			mov quit, 1
-			jmp done
+					// validate input for the y coordinate	
+					mov eax, -1
+					y_loop :
+						cmp eax, -1
+						jne y_done
 
-			// if
-			success :
-				// set gameOver to False
-				mov gameOver, 0
+						// parameter 1 = y
+						mov eax, 1
+						push eax
+						call validateInput
+						pop ebx
 
-			// end of if
-			done :
+						jmp y_loop
+					y_done :
+					mov selectedY, eax
 
-		};
-	}
+					// get 2d array
+					mov eax, offset board
+
+					mov ecx, selectedX
+					imul ecx, 4
+					mov selectedX, ecx
+
+					mov ecx, selectedY
+					imul ecx, 4
+					mov selectedY, ecx
+
+					mov ecx, selectedY
+					imul ecx, dimensions
+
+					add	ecx, selectedX
+					add eax, ecx
+					mov selectedIndex, eax
+
+					cmp [selectedIndex], 9
+					jg check_true
+						jmp check_done
+						
+						check_true :
+							// subtract 10 from selectedIndex if greater than 9
+							sub [eax], 10
+							jmp check_done
+					// end of if-statement
+					check_done :
+
+					call printBoard
+
+					// if selected space is a bomb then end the game
+					mov eax, selectedIndex
+					cmp [eax], 9
+					je loss_true
+						jmp loss_done
+
+						loss_true:
+							// if game is over then set gameOver to true
+							mov gameOver, 1
+							jmp loss_done
+					loss_done:
+					
+				jmp game_over_loop
+			game_over_done :
+			jmp quit_loop
+		quit_done :
+
+		call unhideBoard
+		call printBoard
+
+		mov  eax, offset endOfGameMessage
+		push eax
+		// print endOfGameMessage
+		call printf
+		// clean up the stack
+		// use unused register ebx for cleanup
+		pop ebx
+	};
+
+	cin >> quitVariable;
+
+	__asm {
+
+		/*
+		if (quitVariable == "n") {
+			gameOver = false;
+		}
+		else {
+			quit = True
+		}
+		*/
+
+		// if (quitVariable == "n")
+		cmp quitVariable, 110 // 110 is ascii for 'n'
+		je success
+		// else
+		// set quit to True
+		mov quit, 1
+		jmp done
+
+		// if
+		success :
+			// set gameOver to False
+			mov gameOver, 0
+
+		// end of if
+		done :
+
+	};
+
 	return 0;
 }
