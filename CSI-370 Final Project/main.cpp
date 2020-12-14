@@ -179,7 +179,10 @@ char quitVariable;
 bool gameOver = false;
 bool quit = false;
 const int dimensions = 10;
+int dimensionsMinusOne = dimensions - 1;
 int board[dimensions][dimensions];
+
+int bombChance = 10;		// the higher the number, the less bombs there will be
 
 // string variables used in assembly to print
 char invalidFormat[] = "%s\n";
@@ -230,7 +233,7 @@ extern "C" void printBoard() {
 
 extern "C" void newRandom() {
 
-	currentRandom = rand() % 10;		// maybe make a rareity variable (so we can change the percentage chance easily)
+	currentRandom = rand() % bombChance;
 
 	__asm {
 		// return currentRandom
@@ -454,12 +457,14 @@ extern "C" void generateBoard() {
 					top_middle_done:
 					add eax, loopMath	// bring eax back to it's orignal position
 
+
+
 					// top right
 					// if (j < dimensions && board[i - 1][j + 1] != 19) board[i - 1][j + 1] += 1;
 					mov loopMath, 0
 					cmp ebx, 0
 					jle top_right_done   // if (i <= 0), quit
-					cmp ecx, dimensions
+					cmp ecx, dimensionsMinusOne
 					jge top_right_done
 					mov loopMath2, eax
 					mov eax, dimensions
@@ -503,7 +508,7 @@ extern "C" void generateBoard() {
 					// middle right
 					// if (j < dimensions && board[i][j + 1] != 19) board[i][j + 1] += 1;
 					mov loopMath, 0
-					cmp ecx, dimensions
+					cmp ecx, dimensionsMinusOne
 					jge middle_right_done
 					mov loopMath2, eax
 					mov eax, -4
@@ -525,7 +530,7 @@ extern "C" void generateBoard() {
 					// bottom left
 					// if (j > 0 && board[i + 1][j - 1] != 19) board[i + 1][j - 1] += 1;
 					mov loopMath, 0
-					cmp ebx, dimensions
+					cmp ebx, dimensionsMinusOne
 					jge bottom_left_done
 					cmp ecx, 0
 					jle bottom_left_done
@@ -549,7 +554,7 @@ extern "C" void generateBoard() {
 					// bottom middle
 					// if (board[i + 1][j] != 19) board[i + 1][j] += 1;
 					mov loopMath, 0
-					cmp ebx, dimensions
+					cmp ebx, dimensionsMinusOne
 					jge bottom_middle_done
 					mov loopMath2, eax
 					mov eax, dimensions
@@ -570,9 +575,9 @@ extern "C" void generateBoard() {
 					// bottom right
 					// if (j < dimensions && board[i + 1][j + 1] != 19) board[i + 1][j + 1] += 1;
 					mov loopMath, 0
-					cmp ebx, dimensions
-					jge bottom_left_done
-					cmp ecx, dimensions
+					cmp ebx, dimensionsMinusOne
+					jge bottom_right_done
+					cmp ecx, dimensionsMinusOne
 					jge bottom_right_done
 					mov loopMath2, eax
 					mov eax, dimensions
@@ -746,10 +751,11 @@ int main() {
 
 	srand(time(NULL));
 
+	while(!quit) {
+
 	__asm {
 
 		/* CODE BEING REPLACED:
-		while (!quit) {
 		generateBoard();
 		printBoard();
 		while (!gameOver) {
@@ -781,99 +787,93 @@ int main() {
 		}
 		*/
 
-		quit_loop :
-			// if quit is true then end loop
-			cmp quit, 1
-			je quit_done
+		//generate and print the board on new game
+		call generateBoard
+		call printBoard
 
-			//generate and print the board on new game
-			call generateBoard
-			call printBoard
+		game_over_loop :
+			// if gameOver is true then end loop
+			cmp gameOver, 1
+			je game_over_done
 
-			game_over_loop :
-				// if gameOver is true then end loop
-				cmp gameOver, 1
-				je game_over_done
+				// validate input for the x coordinate	
+				mov eax, -1
+				x_loop:
+					cmp eax, -1
+					jne x_done
 
-					// validate input for the x coordinate	
-					mov eax, -1
-					x_loop:
-						cmp eax, -1
-						jne x_done
+					// parameter 0 = x
+					mov eax, 0
+					push eax
+					call validateInput
+					pop ebx
 
-						// parameter 0 = x
-						mov eax, 0
-						push eax
-						call validateInput
-						pop ebx
+					jmp x_loop
+				x_done:
+				mov selectedX, eax
 
-						jmp x_loop
-					x_done:
-					mov selectedX, eax
+				// validate input for the y coordinate	
+				mov eax, -1
+				y_loop :
+					cmp eax, -1
+					jne y_done
 
-					// validate input for the y coordinate	
-					mov eax, -1
-					y_loop :
-						cmp eax, -1
-						jne y_done
+					// parameter 1 = y
+					mov eax, 1
+					push eax
+					call validateInput
+					pop ebx
 
-						// parameter 1 = y
-						mov eax, 1
-						push eax
-						call validateInput
-						pop ebx
+					jmp y_loop
+				y_done :
+				mov selectedY, eax
 
-						jmp y_loop
-					y_done :
-					mov selectedY, eax
+				// get 2d array
+				mov eax, offset board
 
-					// get 2d array
-					mov eax, offset board
+				mov ecx, selectedX
+				imul ecx, 4
+				mov selectedX, ecx
 
-					mov ecx, selectedX
-					imul ecx, 4
-					mov selectedX, ecx
+				mov ecx, selectedY
+				imul ecx, 4
+				mov selectedY, ecx
 
-					mov ecx, selectedY
-					imul ecx, 4
-					mov selectedY, ecx
+				mov ecx, selectedY
+				imul ecx, dimensions
 
-					mov ecx, selectedY
-					imul ecx, dimensions
+				add	ecx, selectedX
+				add eax, ecx
+				mov ebx, [eax]
 
-					add	ecx, selectedX
-					add eax, ecx
-					mov selectedIndex, eax
-
-					cmp [selectedIndex], 9
-					jg check_true
-						jmp check_done
+				cmp ebx, 9
+				jg check_true
+					jmp check_done
 						
-						check_true :
-							// subtract 10 from selectedIndex if greater than 9
-							sub [eax], 10
-							jmp check_done
-					// end of if-statement
-					check_done :
+					check_true :
+						// subtract 10 from selectedIndex if greater than 9
+						sub [eax], 10
+						sub ebx, 10
+						jmp check_done
+				// end of if-statement
+				check_done :
 
-					call printBoard
+				call printBoard
 
-					// if selected space is a bomb then end the game
-					mov eax, selectedIndex
-					cmp [eax], 9
-					je loss_true
+				// if selected space is a bomb then end the game
+				mov eax, selectedIndex
+				cmp ebx, 9
+				je loss_true
+					jmp loss_done
+
+					loss_true:
+						// if game is over then set gameOver to true
+						mov gameOver, 1
 						jmp loss_done
-
-						loss_true:
-							// if game is over then set gameOver to true
-							mov gameOver, 1
-							jmp loss_done
-					loss_done:
+				loss_done:
 					
-				jmp game_over_loop
-			game_over_done :
-			jmp quit_loop
-		quit_done :
+			jmp game_over_loop
+		game_over_done :
 
 		call unhideBoard
 		call printBoard
@@ -917,6 +917,7 @@ int main() {
 		done :
 
 	};
+	}
 
 	return 0;
 }
