@@ -74,7 +74,6 @@ __asm {
 
 	// if goes here
 	// ...
-	jmp done
 	success :
 		mov eax, 1	// (part of example code)
 
@@ -188,6 +187,7 @@ char endOfGameMessage[] = "\nYou lose\nEnter [n] for a new game or any other key
 
 // helper variable for doing math while trying to access array positions in nested for loops
 int loopMath = 0;
+int loopMath2 = 0;
 
 extern "C" void printBoard() {
 
@@ -228,8 +228,7 @@ extern "C" void printBoard() {
 
 extern "C" void newRandom() {
 
-	cout << "New random ";
-	currentRandom = rand() % 5;		// maybe make a rareity variable (so we can change the percentage chance easily)
+	currentRandom = rand() % 8;		// maybe make a rareity variable (so we can change the percentage chance easily)
 
 	__asm {
 		// return currentRandom
@@ -253,7 +252,6 @@ extern "C" void generateBoard() {
 	//	}
 	//}
 
-	cout << "foobar1";
 
 	__asm {
 		// set eax to 0
@@ -261,15 +259,17 @@ extern "C" void generateBoard() {
 
 		mov ebx, 0
 		outer :
-		mov ecx, 0
+			mov ecx, 0
 			inner :
 
 				// save ecx before calling rand()
+				// rand() overwrites ecx for some reason
 				mov loopMath, ecx
 
 				xor eax, eax
 				// get new random number
 				call newRandom
+				// put return value of newRandom into currentRandom
 				mov currentRandom, eax
 				mov ecx, loopMath
 				
@@ -321,8 +321,7 @@ extern "C" void generateBoard() {
 		jne outer
 	};
 
-	cout << "foobar2";
-
+	/*
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
 			// place all numbers on the board
@@ -357,8 +356,253 @@ extern "C" void generateBoard() {
 
 			}
 		}
-
 	}
+	*/
+		
+	__asm {
+
+		mov ebx, 0
+		number_placement_outer :
+			mov ecx, 0
+				number_placement_inner :
+
+			// get the board[i][j] vvvvvvvv
+				xor eax, eax	// clear eax and loopMath
+				mov loopMath, 0
+
+				mov eax, ecx 
+				imul eax, 4		// eax = ecx * 4
+
+				mov loopMath, offset board
+				add eax, loopMath	// eax = (address of board) + (ecx * 4)
+
+				mov edx, dimensions
+				imul edx, ebx	// edx = dimensions * outerloop counter
+
+				imul edx, 4
+
+				add eax, edx	// eax = &board[i][j]	
+				mov edx, [eax]	// edx = board[i][j]
+					
+
+			// inner nested loop code vvvvv
+				// if (x > 10)
+				cmp edx, 19
+				je is_bomb_success
+				// else goes here
+				// ...
+				jmp is_bomb_done
+
+				// if goes here
+				// ...
+				is_bomb_success:
+
+					// if the current cell is a bomb, code for adding all the numbers will go here vvvvvvvvvvvvvvvvvvvvv
+
+					// order to place numbers:
+					// 1 2 3
+					// 4   5
+					// 6 7 8
+				
+					
+					// add to the top left square if possible
+					// if (j > 0 && board[i - 1][j - 1] != 19) board[i - 1][j - 1] += 1;
+					mov loopMath, 0	// just incase if-statement quits first, make sure it doesn't add to eax
+					cmp ecx, 0
+					jle top_left_done	// if (j <= 0), quit
+					cmp ebx, 0
+					jle top_left_done   // if (i <= 0), quit
+					// eax - dimensions * 4 - (4)
+					mov loopMath2, eax	// put old eax into loopMath2
+					mov eax, dimensions
+					imul eax, 4
+					add eax, 4
+					mov loopMath, eax
+					mov eax, loopMath2
+					sub eax, loopMath	// eax = (dimensions * 4 - 1) AKA (loopMath)
+					// eax should now equal &board[i - 1][j - 1]
+					mov edx, [eax]	// edx = board[i - 1][j - 1]
+					cmp edx, 19
+					je top_left_done	// if (board[i - 1][j - 1] == 19), quit
+
+					// both are true, so do...
+					inc [eax]			// increment that cell by 1
+						
+					top_left_done:
+					add eax, loopMath	// bring eax back to it's orignal position
+
+
+					// top middle
+					// if (board[i - 1][j] != 19) board[i - 1][j] += 1;
+					mov loopMath, 0
+					cmp ebx, 0
+					jle top_middle_done
+					mov loopMath2, eax
+					mov eax, dimensions
+					imul eax, 4
+					mov loopMath, eax
+					mov eax, loopMath2
+					sub eax, loopMath
+					mov edx, [eax]
+					cmp edx, 19
+					je top_middle_done
+
+					inc [eax]			// increment that cell by 1
+
+					top_middle_done:
+					add eax, loopMath	// bring eax back to it's orignal position
+
+					// top right
+					// if (j < dimensions && board[i - 1][j + 1] != 19) board[i - 1][j + 1] += 1;
+					mov loopMath, 0
+					cmp ebx, 0
+					jle top_right_done   // if (i <= 0), quit
+					cmp ecx, dimensions
+					jge top_right_done
+					mov loopMath2, eax
+					mov eax, dimensions
+					imul eax, 4
+					sub eax, 4
+					mov loopMath, eax
+					mov eax, loopMath2
+					sub eax, loopMath
+					mov edx, [eax]
+					cmp edx, 19
+					je top_right_done
+
+					inc [eax]			// increment that cell by 1
+						
+					top_right_done:
+					add eax, loopMath	// bring eax back to it's orignal position
+					
+					
+
+					
+					// middle left
+					// if (j > 0 && board[i][j - 1] != 19) board[i][j - 1] += 1;
+					mov loopMath, 0
+					cmp ecx, 0
+					jle middle_left_done
+					mov loopMath2, eax
+					mov eax, 4
+					mov loopMath, eax
+					mov eax, loopMath2
+					sub eax, loopMath
+					mov edx, [eax]
+					cmp edx, 19
+					je middle_left_done
+
+					inc [eax]			// increment that cell by 1
+
+					middle_left_done:
+					add eax, loopMath	// bring eax back to it's orignal position
+					
+						
+					// middle right
+					// if (j < dimensions && board[i][j + 1] != 19) board[i][j + 1] += 1;
+					mov loopMath, 0
+					cmp ecx, dimensions
+					jge middle_right_done
+					mov loopMath2, eax
+					mov eax, -4
+					mov loopMath, eax
+					mov eax, loopMath2
+					sub eax, loopMath
+					mov edx, [eax]
+					cmp edx, 19
+					je middle_right_done
+
+					inc[eax]			// increment that cell by 1
+
+					middle_right_done:
+					add eax, loopMath	// bring eax back to it's orignal position
+
+					
+
+
+					// bottom left
+					// if (j > 0 && board[i + 1][j - 1] != 19) board[i + 1][j - 1] += 1;
+					mov loopMath, 0
+					cmp ebx, dimensions
+					jge bottom_left_done
+					cmp ecx, 0
+					jle bottom_left_done
+					mov loopMath2, eax
+					mov eax, dimensions
+					imul eax, 4
+					sub eax, 4
+					mov loopMath, eax
+					mov eax, loopMath2
+					add eax, loopMath
+					mov edx, [eax]
+					cmp edx, 19
+					je bottom_left_done
+
+					inc [eax]			// increment that cell by 1
+
+					bottom_left_done:
+					sub eax, loopMath	// bring eax back to it's orignal position
+					
+					
+					// bottom middle
+					// if (board[i + 1][j] != 19) board[i + 1][j] += 1;
+					mov loopMath, 0
+					cmp ebx, dimensions
+					jge bottom_middle_done
+					mov loopMath2, eax
+					mov eax, dimensions
+					imul eax, 4
+					mov loopMath, eax
+					mov eax, loopMath2
+					add eax, loopMath
+					mov edx, [eax]
+					cmp edx, 19
+					je bottom_middle_done
+
+					inc [eax]			// increment that cell by 1
+
+					bottom_middle_done:
+					sub eax, loopMath	// bring eax back to it's orignal position
+					
+
+					// bottom right
+					// if (j < dimensions && board[i + 1][j + 1] != 19) board[i + 1][j + 1] += 1;
+					mov loopMath, 0
+					cmp ebx, dimensions
+					jge bottom_left_done
+					cmp ecx, dimensions
+					jge bottom_right_done
+					mov loopMath2, eax
+					mov eax, dimensions
+					imul eax, 4
+					add eax, 4
+					mov loopMath, eax
+					mov eax, loopMath2
+					add eax, loopMath
+					mov edx, [eax]
+					cmp edx, 19
+					je bottom_right_done
+
+					inc[eax]			// increment that cell by 1
+
+					bottom_right_done:
+					sub eax, loopMath	// bring eax back to it's orignal position
+
+
+
+				// end of if-statement
+				is_bomb_done:
+
+			// inner loop increase
+			inc ecx
+			cmp ecx, dimensions
+			jne number_placement_inner
+		// outer loop increase
+		inc ebx
+		cmp ebx, dimensions
+		jne number_placement_outer
+	};
+		
 }
 
 extern "C" void unhideBoard() {
@@ -407,8 +651,8 @@ extern "C" void unhideBoard() {
 				// edx now holds the value of board[i][j]
 
 				// begin if statement ==========
-				// if (board[j][i] > 9)
-				cmp edx, 9
+				// if (board[i][j] > 10)	// this will show all numbers and X's but not 0's
+				cmp edx, 10
 				// then jump to success
 				jg success
 				// else
@@ -426,6 +670,8 @@ extern "C" void unhideBoard() {
 				// end of if
 				done :
 				// end if statement ============
+
+
 
 				// inner loop increase
 				inc ecx
@@ -492,18 +738,6 @@ extern "C" int validateInput(string type) {
 int main() {
 
 	srand(time(NULL));
-
-	__asm {
-		mov eax, 0
-		while_loop :
-			cmp eax, dimensions
-			jge while_done
-			inc eax
-			jmp while_loop
-		while_done :
-
-
-	};
 
 	while (!quit) {
 		generateBoard();
