@@ -164,6 +164,7 @@ __asm {
 
 using namespace std;
 
+// used throughout assembly and c++
 int i;
 int j;
 int k;
