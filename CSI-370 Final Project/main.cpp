@@ -183,12 +183,11 @@ const int dimensions = 10;
 int dimensionsMinusOne = dimensions - 1;
 int board[dimensions][dimensions];
 
-int bombChance = 10;		// the higher the number, the less bombs there will be
+int bombChance = 5;		// the higher the number, the less bombs there will be
 
 // string variables used in assembly to print
 char invalidFormat[] = "%s\n";
 char invalidMessage[] = "Invalid input";
-
 char endOfGameMessage[] = "\nYou lose\nEnter [n] for a new game or any other key to quit\n";
 
 // helper variable for doing math while trying to access array positions in nested for loops
@@ -197,17 +196,22 @@ int loopMath2 = 0;
 
 extern "C" void printBoard() {
 
+	// this function has been kept in C++ due to the number of print statements
+
 	toDisplay = "";
 
 	system("cls");
+	// display x coordinates above columns
 	for (k = 0; k < dimensions; k++) {
 		cout << "  " << k << " ";
 	}
 	cout << endl;
 	for (i = 0; i < dimensions; i++) {
+		// display row separators
 		for (k = 0; k < dimensions; k++) {
 			cout << "+---";
 		}
+		// display final column/row connector at the end of a row
 		cout << "+" << endl;
 		for (j = 0; j < dimensions; j++) {
 			if (board[i][j] > 9) {
@@ -218,14 +222,18 @@ extern "C" void printBoard() {
 				if (board[i][j] == 9) {
 					toDisplay = "X";
 				}
+				// otherwise display the current location's value
 				else {
 					toDisplay = to_string(board[i][j]);
 				}
 			}
+			// display column separator
 			cout << "| " << toDisplay << " ";
 		}
+		// display final column separator as well as the y coordinate next to the column
 		cout << "| " << i << endl;
 	}
+	// display the final row separator
 	for (k = 0; k < dimensions; k++) {
 		cout << "+---";
 	}
@@ -243,21 +251,22 @@ extern "C" void newRandom() {
 }
 
 extern "C" void generateBoard() {
-	
-	//for (i = 0; i < dimensions; i++) {
-	//	for (j = 0; j < dimensions; j++) {
-	//		// set bombs on the board (anything >9 is hidden, so the bombs are hidden by default)
-	//		random = rand() % 5;
-	//							
-	//		if (random == 0) {
-	//			board[i][j] = 19;
-	//		}
-	//		else {
-	//			board[i][j] = 10;
-	//		}
-	//	}
-	//}
 
+	/* CODE BEING REPLACED:
+	for (i = 0; i < dimensions; i++) {
+		for (j = 0; j < dimensions; j++) {
+			// set bombs on the board (anything >9 is hidden, so the bombs are hidden by default)
+			random = rand() % 5;
+								
+			if (random == 0) {
+				board[i][j] = 19;
+			}
+			else {
+				board[i][j] = 10;
+			}
+		}
+	}
+	*/
 
 	__asm {
 		// set eax to 0
@@ -327,7 +336,7 @@ extern "C" void generateBoard() {
 		jne outer
 	};
 
-	/*
+	/* CODE BEING REPLACED:
 	for (i = 0; i < dimensions; i++) {
 		for (j = 0; j < dimensions; j++) {
 			// place all numbers on the board
@@ -617,7 +626,7 @@ extern "C" void unhideBoard() {
 
 	__asm {
 
-		/*
+		/* CODE BEING REPLACED:
 		for (i = 0; i < dimensions; i++) {
 			for (j = 0; j < dimensions; j++) {
 				if (board[j][i] > 9) {
@@ -707,12 +716,14 @@ extern "C" int validateInput(int typeCode) {
 	cin >> enteredVal;
 
 	__asm {
-		// if (enteredVal < 0 || enteredVal > 9) {
-		// 	  cout << "Invalid input" << endl << endl;
-		// 	  return -1;
-		// } else {
-		//    return enteredVal
-		// }
+		/* CODE BEING REPLACED:
+		 if (enteredVal < 0 || enteredVal > 9) {
+		 	  cout << "Invalid input" << endl << endl;
+		 	  return -1;
+		 } else {
+		    return enteredVal
+		 }
+		 */
 
 		// if (enteredVal < 0)
 		cmp enteredVal, 0
@@ -892,7 +903,7 @@ int main() {
 
 	__asm {
 
-		/*
+		/* CODE BEING REPLACED:
 		if (quitVariable == "n") {
 			gameOver = false;
 		}

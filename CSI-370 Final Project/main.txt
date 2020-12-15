@@ -1,0 +1,177 @@
+int main() {
+
+	srand(time(NULL));
+
+	__asm {
+
+		/* CODE BEING REPLACED:
+		while (!quit) {
+		generateBoard();
+		printBoard();
+		while (!gameOver) {
+			selectedX = -1;
+			while (selectedX == -1) {
+				selectedX = validateInput("X");
+			}
+			selectedY = -1;
+			while (selectedY == -1) {
+				selectedY = validateInput("Y");
+			}
+
+			if (board[selectedY][selectedX] > 9) {
+				// any number > 10 is hidden,
+				// make the board[y][x] unhidden if it's not already
+				board[selectedY][selectedX] -= 10;
+			}
+
+			printBoard();
+
+			if(board[selectedY][selectedX] == 9) {
+				gameOver = true;
+			}
+
+			unhideBoard();
+			printBoard();
+			cout << endl << "You lose..." << endl;
+			cout << "Enter [n] for a new game or any other key to quit" << endl;
+		}
+		*/
+
+		quit_loop :
+			// if quit is true then end loop
+			cmp quit, 1
+			je quit_done
+
+			//generate and print the board on new game
+			call generateBoard
+			call printBoard
+
+			game_over_loop :
+				// if gameOver is true then end loop
+				cmp gameOver, 1
+				je game_over_done
+
+					// validate input for the x coordinate	
+					mov eax, -1
+					x_loop:
+						cmp eax, -1
+						jne x_done
+
+						// parameter 0 = x
+						mov eax, 0
+						push eax
+						call validateInput
+						pop ebx
+
+						jmp x_loop
+					x_done:
+					mov selectedX, eax
+
+					// validate input for the y coordinate	
+					mov eax, -1
+					y_loop :
+						cmp eax, -1
+						jne y_done
+
+						// parameter 1 = y
+						mov eax, 1
+						push eax
+						call validateInput
+						pop ebx
+
+						jmp y_loop
+					y_done :
+					mov selectedY, eax
+
+					// get 2d array
+					mov eax, offset board
+
+					mov ecx, selectedX
+					imul ecx, 4
+					mov selectedX, ecx
+
+					mov ecx, selectedY
+					imul ecx, 4
+					mov selectedY, ecx
+
+					mov ecx, selectedY
+					imul ecx, dimensions
+
+					add	ecx, selectedX
+					add eax, ecx
+					mov selectedIndex, eax
+
+					cmp [selectedIndex], 9
+					jg check_true
+						jmp check_done
+						
+						check_true :
+							// subtract 10 from selectedIndex if greater than 9
+							sub [eax], 10
+							jmp check_done
+					// end of if-statement
+					check_done :
+
+					call printBoard
+
+					// if selected space is a bomb then end the game
+					cmp [selectedIndex], 9
+					je loss_true
+						jmp loss_done
+
+						loss_true:
+							// if game is over then set gameOver to true
+							mov gameOver, 1
+							jmp loss_done
+					loss_done:
+					
+				jmp game_over_loop
+			game_over_done :
+			jmp quit_loop
+		quit_done :
+
+		call unhideBoard
+		call printBoard
+
+		mov  eax, offset endOfGameMessage
+		push eax
+		// print endOfGameMessage
+		call printf
+		// clean up the stack
+		// use unused register ebx for cleanup
+		pop ebx
+	};
+
+	cin >> quitVariable;
+
+	__asm {
+
+		/*
+		if (quitVariable == "n") {
+			gameOver = false;
+		}
+		else {
+			quit = True
+		}
+		*/
+
+		// if (quitVariable == "n")
+		cmp quitVariable, 110 // 110 is ascii for 'n'
+		je success
+		// else
+		// set quit to True
+		mov quit, 1
+		jmp done
+
+		// if
+		success :
+			// set gameOver to False
+			mov gameOver, 0
+
+		// end of if
+		done :
+
+	};
+
+	return 0;
+}
